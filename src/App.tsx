@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+// Cephboy AI Coach v1.1.0 - Oracle de Motivation Trépidant et Rapide
+
+
 import React, { useState, useEffect, useRef } from "react";
 import { 
   Sparkles, 
