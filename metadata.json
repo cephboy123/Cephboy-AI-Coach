@@ -1,0 +1,6 @@
+{
+  "name": "Cephboy AI Coach",
+  "description": "Le coach ultime de la motivation émotionnelle profonde, conçu pour toucher votre âme, surmonter vos doutes et libérer le guerrier qui sommeille en vous.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
