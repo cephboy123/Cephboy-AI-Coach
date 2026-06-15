@@ -362,12 +362,15 @@ export default function App() {
           
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/20">
-                <Flame className="w-5.5 h-5.5 fill-current animate-pulse" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center border border-red-500/25 bg-slate-950 shadow-md shadow-red-500/25 transition-transform hover:scale-105 duration-300">
+                <div className="w-full h-full bg-slate-950 flex items-center justify-center border border-red-500/50 relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-600/10 to-transparent"></div>
+                  <Flame className="w-5 h-5 text-red-500 fill-red-500/20 animate-pulse" />
+                </div>
               </div>
-              <span className="absolute -bottom-1 -right-1 flex h-3.5 w-3.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-amber-500"></span>
+              <span className="absolute -bottom-1 -right-0.5 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
               </span>
             </div>
             <div>
@@ -375,7 +378,7 @@ export default function App() {
                 Cephboy AI Coach
               </h1>
               <p className="font-mono text-[9.5px] text-amber-500/60 uppercase tracking-widest flex items-center gap-1">
-                <TrendingUp className="w-3 h-3 text-amber-500" /> Le Maître de l'Éveil Émotionnel
+                <TrendingUp className="w-3 h-3 text-amber-500" /> Le Maître de l'Éveil Émotionnel v1.1.0
               </p>
             </div>
           </div>
@@ -755,7 +758,7 @@ export default function App() {
                   >
                     
                     {/* The Climax Speech Player Box */}
-                    <div className="p-6 bg-gradient-to-br from-slate-900 via-slate-900/95 to-slate-950 rounded-2xl border border-amber-500/20 shadow-xl space-y-4 relative overflow-hidden">
+                    <div className="p-6 bg-gradient-to-br from-slate-900 via-slate-900/95 to-slate-950 rounded-3xl border border-amber-500/25 shadow-2xl space-y-6 relative overflow-hidden">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full filter blur-2xl pointer-events-none"></div>
 
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -772,7 +775,7 @@ export default function App() {
                               L'ORACLE DE CEPHBOY
                             </span>
                             <h4 className="font-display text-sm font-semibold text-slate-200">
-                              La Sentence de Victoire
+                              Parole Sacrée de Motivation
                             </h4>
                           </div>
                         </div>
@@ -825,7 +828,7 @@ export default function App() {
                           <button
                             onClick={handleCopy}
                             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-mono transition-all bg-slate-950 border-slate-800 hover:bg-slate-900 text-slate-400 hover:text-amber-400`}
-                            title="Copier l'oracle complet"
+                            title="Copier la motivation"
                           >
                             {isCopied ? (
                               <>
@@ -842,98 +845,16 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Climax Statement blockquote representation */}
-                      <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-850/60 relative">
-                        <Quote className="absolute top-2 left-2 w-8 h-8 text-slate-900 pointer-events-none" />
-                        <p className="font-display text-sm font-semibold text-amber-300 italic pl-6 pr-4 leading-relaxed tracking-wide text-center">
+                      {/* Unified short, beautiful display of Motivation */}
+                      <div className="bg-slate-950/60 p-6 sm:p-8 rounded-2xl border border-slate-850/60 relative my-2">
+                        <Quote className="absolute top-3 left-3 w-10 h-10 text-slate-900/60 pointer-events-none" />
+                        <p className="font-display text-base sm:text-lg font-semibold text-amber-300 italic pl-10 pr-6 leading-relaxed tracking-wide text-center">
                           "{victorySentence}"
                         </p>
                       </div>
 
-                    </div>
-
-                    {/* Full Scripture text rendering in majestic cards */}
-                    <div className="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 sm:p-8 space-y-6 relative">
-                      
-                      <div className="absolute top-3 right-4 font-mono text-[9px] text-slate-600 uppercase tracking-widest hidden sm:block">
-                        Parchemins sacrés • Traduit du français
-                      </div>
-
-                      {/* Header with name and current trial */}
-                      <div className="flex items-center gap-3 border-b border-slate-900/60 pb-5">
-                        <div className="w-1.5 h-8 bg-amber-500 rounded-full"></div>
-                        <div>
-                          <div className="text-xs font-mono text-slate-500 flex items-center gap-2">
-                            <span>Sermon destiné à</span>
-                            <span className="text-amber-500 font-bold uppercase">{userName || "Guerrier"}</span>
-                          </div>
-                          
-                          <div className="text-[11px] font-mono text-slate-400 mt-1 flex items-center gap-2">
-                            <span className="flex h-1.5 w-1.5 rounded-full bg-red-500"></span>
-                            <span>Affrontant : {PRESET_STATES.find(s => s.id === selectedState)?.label}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* The paragraphs mapped lovingly with individual TTS trigger controls */}
-                      <div className="space-y-6 font-sans text-[14px] leading-relaxed text-slate-300">
-                        {getParagraphs(motivationText).map((paragraph, index) => {
-                          const isParagraphActive = activeParagraphIndex === index;
-                          const isClimaxOfParagraph = paragraph === `**${victorySentence}**` || paragraph.includes(victorySentence);
-                          
-                          return (
-                            <div 
-                              key={index} 
-                              className={`group/para relative p-4 rounded-xl transition duration-300 ${
-                                isParagraphActive 
-                                  ? "bg-amber-500/5 shadow-inner border border-amber-500/20" 
-                                  : isClimaxOfParagraph 
-                                    ? "bg-slate-900/60 border border-slate-850" 
-                                    : "hover:bg-slate-900/30"
-                              }`}
-                            >
-                              {/* Audio Speak handle inside paragraph */}
-                              <div className="absolute top-2.5 right-2.5 opacity-0 group-hover/para:opacity-100 transition-opacity flex items-center gap-1 bg-slate-950 rounded-lg p-1 border border-slate-850 shadow-sm">
-                                <button
-                                  onClick={() => handleSynthesizeParagraph(paragraph, index)}
-                                  disabled={isParagraphLoading && activeParagraphIndex === index}
-                                  className={`p-1 rounded text-[10px] uppercase font-mono flex items-center gap-1 ${
-                                    isParagraphActive 
-                                      ? "text-amber-400" 
-                                      : "text-slate-500 hover:text-amber-400"
-                                  }`}
-                                  title="Faire réciter ce paragraphe"
-                                >
-                                  {isParagraphLoading && activeParagraphIndex === index ? (
-                                    <RefreshCw className="w-3 h-3 animate-spin" />
-                                  ) : isParagraphActive && isVoicePlaying ? (
-                                    <>
-                                      <Square className="w-3 h-3 fill-current" />
-                                      <span className="px-0.5">Silence</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Play className="w-3 h-3 fill-current" />
-                                      <span className="px-0.5">Réciter</span>
-                                    </>
-                                  )}
-                                </button>
-                              </div>
-
-                              <p className={`font-sans ${
-                                isClimaxOfParagraph 
-                                  ? "text-amber-200 font-semibold border-l-2 border-amber-500/50 pl-4 py-1 italic" 
-                                  : "text-slate-300 leading-loose"
-                              }`}>
-                                {paragraph}
-                              </p>
-                            </div>
-                          );
-                        })}
-                      </div>
-
                       {/* Footer Actions inside Result view */}
-                      <div className="pt-6 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="pt-4 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4">
                         
                         <div className="flex items-center gap-2 text-xs font-mono text-slate-500">
                           <Eye className="w-4 h-4 text-amber-500/70" />
@@ -946,7 +867,7 @@ export default function App() {
                             setShowResult(false);
                             setCustomContext("");
                           }}
-                          className="w-full sm:w-auto px-4 py-2 border border-slate-800 hover:border-slate-700 rounded-xl text-xs font-mono text-slate-400 hover:text-slate-200 transition"
+                          className="w-full sm:w-auto px-4 py-2 border border-slate-850 hover:border-slate-700 bg-slate-950 hover:bg-slate-900 rounded-xl text-xs font-mono text-slate-300 hover:text-slate-100 transition whitespace-nowrap"
                         >
                           Demander un Autre Oracle
                         </button>
