@@ -29,10 +29,11 @@ import {
   Sliders,
   ChevronRight,
   TrendingUp,
-  Award
+  Award,
+  Download
 } from "lucide-react";
 import { EpicAmbientSynth } from "./utils/synth";
-import { playRawPCM, PlaybackSession } from "./utils/pcmPlayer";
+import { playRawPCM, PlaybackSession, downloadPCMAsWav } from "./utils/pcmPlayer";
 
 interface SavedMotivation {
   id: string;
@@ -44,11 +45,11 @@ interface SavedMotivation {
 }
 
 const PRESET_STATES = [
-  { id: "exhausted", label: "Épuisé par la tempête", description: "Pour celui qui porte un fardeau colossal et sent ses forces faiblir.", icon: Compass },
-  { id: "discouraged", label: "Invisible et découragé", description: "Pour celui qui doute de sa valeur et de la portée de ses efforts silencieux.", icon: Heart },
-  { id: "crossroads", label: "Devant un choix crucial", description: "Pour celui qui fait face à l'inconnu et a besoin d'audace sacrée.", icon: Sparkles },
-  { id: "broken", label: "Brisé par l'échec", description: "Pour celui dont la fierté a mordu la poussière et qui doit rebâtir.", icon: Flame },
-  { id: "guerre", label: "Prêt à mener le combat de sa vie", description: "Pour celui qui a besoin d'une ferveur de guerrier absolue d'ici quelques heures.", icon: Award }
+  { id: "exhausted", label: "Physiquement et mentalement épuisé", description: "Pour surmonter un coup de mou ou un fardeau mental extrême.", icon: Compass },
+  { id: "discouraged", label: "Démotivé et invisible", description: "Pour relancer la machine quand tes efforts passent inaperçus.", icon: Heart },
+  { id: "crossroads", label: "Devant un choix crucial", description: "Pour dissiper le doute, vaincre la peur de l'inconnu et passer à l'action.", icon: Sparkles },
+  { id: "broken", label: "K.O. par un échec", description: "Pour transformer tes cicatrices en force et te reconstruire de manière implacable.", icon: Flame },
+  { id: "guerre", label: "Prêt pour le défi de ta vie", description: "Pour doper ton adrénaline avant un examen, une compétition ou une épreuve importante.", icon: Award }
 ];
 
 export default function App() {
@@ -56,6 +57,7 @@ export default function App() {
   const [userName, setUserName] = useState<string>("");
   const [selectedState, setSelectedState] = useState<string>("exhausted");
   const [customContext, setCustomContext] = useState<string>("");
+  const [voiceGender, setVoiceGender] = useState<"male" | "female">("male");
 
   // UI state
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -77,6 +79,7 @@ export default function App() {
   const [isVoicePlaying, setIsVoicePlaying] = useState<boolean>(false);
   const [activeParagraphIndex, setActiveParagraphIndex] = useState<number | null>(null);
   const [isParagraphLoading, setIsParagraphLoading] = useState<boolean>(false);
+  const [isVoiceLoading, setIsVoiceLoading] = useState<boolean>(false);
 
   // Saved motivations
   const [savedMotivations, setSavedMotivations] = useState<SavedMotivation[]>([]);
@@ -94,7 +97,7 @@ export default function App() {
   // Copy sermon to clipboard
   const handleCopy = () => {
     if (!motivationText) return;
-    const fullTextToCopy = `CEPHBOY AI COACH - L'ORACLE SACRÉ\n\n"${victorySentence}"\n\n${motivationText}`;
+    const fullTextToCopy = `CEPHBOY AI COACH - MOTIVATION CINÉMATIQUE\n\n"${victorySentence}"\n\n${motivationText}`;
     navigator.clipboard.writeText(fullTextToCopy).then(() => {
       setIsCopied(true);
       setTimeout(() => {
@@ -193,34 +196,54 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userName: userName || "Guerrier",
+          userName: userName || "Champion",
           userState: stateLabel,
-          customContext: customContext
+          customContext: customContext,
+          voiceGender: voiceGender
         })
       });
 
       if (!response.ok) {
-        throw new Error("La connexion spirituelle avec le serveur a échoué.");
+        throw new Error("La connexion avec le coach AI a échoué.");
       }
 
       const data = await response.json();
       setMotivationText(data.text);
       setVictorySentence(data.victorySentence);
-      setCurrentAudioBase64(data.audioBase64);
+      setCurrentAudioBase64(null); // Clear previous voice audio
       setShowResult(true);
 
-      // Play the final dramatic voice automatically once loaded to blow their mind
-      if (data.audioBase64) {
-        // Wait a slight fraction for visual reveal
-        setTimeout(() => {
-          triggerVoicePlayback(data.audioBase64, "sentence");
-        }, 1200);
-      }
-
-      // Scroll into view
+      // Scroll into view instantly so they can read the text immediately
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 500);
+      }, 300);
+
+      // Start lazy background TTS loading to keep the response lightning fast
+      setIsVoiceLoading(true);
+      fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: data.victorySentence, voiceGender: voiceGender })
+      })
+      .then((ttsRes) => {
+        if (!ttsRes.ok) throw new Error();
+        return ttsRes.json();
+      })
+      .then((ttsData) => {
+        if (ttsData.audioBase64) {
+          setCurrentAudioBase64(ttsData.audioBase64);
+          // Play the voice automatically with a short delay for great cinema impact!
+          setTimeout(() => {
+            triggerVoicePlayback(ttsData.audioBase64, "sentence");
+          }, 300);
+        }
+      })
+      .catch((err) => {
+        console.error("Background voice synthesis failed:", err);
+      })
+      .finally(() => {
+        setIsVoiceLoading(false);
+      });
 
     } catch (err) {
       console.error(err);
@@ -267,7 +290,7 @@ export default function App() {
       const response = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: textToSpeak })
+        body: JSON.stringify({ text: textToSpeak, voiceGender: voiceGender })
       });
 
       if (!response.ok) throw new Error();
@@ -298,8 +321,8 @@ export default function App() {
         hour: "2-digit",
         minute: "2-digit"
       }),
-      name: userName || "Guerrier",
-      state: PRESET_STATES.find(s => s.id === selectedState)?.label || "Épreuve du Guerrier",
+      name: userName || "Champion",
+      state: PRESET_STATES.find(s => s.id === selectedState)?.label || "Défi suprême",
       text: motivationText,
       victorySentence: victorySentence
     };
@@ -404,7 +427,7 @@ export default function App() {
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                   </span>
                   <Volume2 className="w-3.5 h-3.5 animate-bounce" />
-                  <span>AMBIANCE SACRÉE PARÉE</span>
+                  <span>AMBIANCE CINÉMATIQUE ACTIVÉE</span>
                 </>
               ) : (
                 <>
@@ -460,16 +483,16 @@ export default function App() {
             MAIS <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-200 to-amber-500">NE JAMAIS ABDIQUER.</span>
           </h2>
           
-          <p className="text-slate-400 text-sm max-w-lg mx-auto font-sans leading-relaxed">
-            Cephboy AI Coach n'est pas un conseiller à phrases creuses. 
-            Il plonge dans l'obscurité de tes doutes, caresse tes cicatrices secrètes et souffle sur tes braises glacées pour qu'un incendie indomptable renaisse de tes larmes.
+           <p className="text-slate-400 text-sm max-w-lg mx-auto font-sans leading-relaxed">
+            Cephboy AI Coach n'est pas un conseiller ordinaire. 
+            Il cible tes doutes réels, t'apporte la rigueur mentale nécessaire et te pousse à agir immédiatement avec la force d'un discours de cinéma.
           </p>
 
           {showSynthTip && (
             <div className="p-3 bg-amber-500/5 max-w-md mx-auto rounded-xl border border-amber-500/10 text-xs text-amber-300 flex items-center justify-center gap-3">
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
               <p>
-                <strong>Conseil d'immersion :</strong> Active <strong>l'Ambiance Sacrée</strong> en haut à droite avant de lancer la motivation pour un voyage spirituel de résonance.
+                <strong>Conseil d'immersion :</strong> Active <strong>l'Ambiance Sonore</strong> en haut à droite avant de lancer la motivation pour une immersion digne des plus grands films.
               </p>
             </div>
           )}
@@ -491,7 +514,7 @@ export default function App() {
                     JOURNAL DES ÉPREUVES ET DES VICTOIRES
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Retrouve ici les sermons sacrés et les paroles impérissables que tu as gravés dans le marbre du temps.
+                    Retrouve ici les discours marquants et les paroles impactantes enregistrés au cours de ton parcours.
                   </p>
                 </div>
                 <div role="status" className="font-mono text-xs text-slate-500">
@@ -583,21 +606,55 @@ export default function App() {
                   <div className="space-y-2">
                     <label className="block text-xs font-mono font-medium text-slate-400 uppercase tracking-wider flex items-center gap-2">
                       <User className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Quel est ton prénom, voyageur ?</span>
+                      <span>Quel est ton prénom ?</span>
                     </label>
                     <input
                       type="text"
                       value={userName}
                       onChange={(e) => setUserName(e.target.value)}
-                      placeholder="Ex: Sébastien, Valérie, Guerrier..."
+                      placeholder="Ex: Sébastien, Valérie, Champion..."
                       className="w-full bg-slate-950/80 border border-slate-800 focus:border-amber-500/40 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 outline-none transition font-sans shadow-inner focus:ring-1 focus:ring-amber-500/20"
                     />
+                  </div>
+
+                  {/* Voice Gender Selection */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-mono font-medium text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                      <Volume2 className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Voix du Coach</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setVoiceGender("male")}
+                        className={`py-2.5 px-4 rounded-xl border text-center font-sans font-medium text-xs transition-all duration-300 flex items-center justify-center gap-2 outline-none ${
+                          voiceGender === "male"
+                            ? "bg-amber-500/10 border-amber-500/40 text-amber-300 shadow-inner"
+                            : "bg-slate-950/80 border-slate-800 hover:bg-slate-900/40 text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        <User className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Voix Homme</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setVoiceGender("female")}
+                        className={`py-2.5 px-4 rounded-xl border text-center font-sans font-medium text-xs transition-all duration-300 flex items-center justify-center gap-2 outline-none ${
+                          voiceGender === "female"
+                            ? "bg-amber-500/10 border-amber-500/40 text-amber-300 shadow-inner"
+                            : "bg-slate-950/80 border-slate-800 hover:bg-slate-900/40 text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        <User className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>Voix Femme</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Soul State Presets */}
                   <div className="space-y-2.5">
                     <label className="block text-xs font-mono font-medium text-slate-400 uppercase tracking-wider">
-                      Dans quel abîme se trouve ton cœur en ce moment ?
+                      À quel défi fais-tu face en ce moment ?
                     </label>
                     
                     <div className="space-y-2">
@@ -641,15 +698,15 @@ export default function App() {
                     <div className="flex justify-between items-center text-xs font-mono text-slate-400 uppercase tracking-wider">
                       <label className="flex items-center gap-2">
                         <MessageSquare className="w-3.5 h-3.5 text-amber-500" />
-                        <span>Confession Secrète (Facultatif)</span>
+                        <span>Contexte personnel (Facultatif)</span>
                       </label>
-                      <span className="text-[10px] text-slate-600">Fardeau personnel</span>
+                      <span className="text-[10px] text-slate-600">Défis spécifiques</span>
                     </div>
                     
                     <textarea
                       value={customContext}
                       onChange={(e) => setCustomContext(e.target.value)}
-                      placeholder="Décris brièvement la douleur, le rêve enfoui ou le mur de briques auquel tu fais face actuellement... Laisse ton âme parler."
+                      placeholder="Décris brièvement la situation, l'obstacle ou l'objectif précis auquel tu fais face actuellement..."
                       rows={4}
                       className="w-full bg-slate-950/80 border border-slate-800 focus:border-amber-500/40 rounded-xl px-4 py-3 text-xs text-slate-300 placeholder:text-slate-700 outline-none transition font-sans resize-none shadow-inner focus:ring-1 focus:ring-amber-500/20 leading-relaxed"
                     />
@@ -673,7 +730,7 @@ export default function App() {
                     </button>
                     
                     <p className="text-[10px] text-slate-600 text-center font-mono mt-3">
-                      Prépare-toi à un choc émotionnel. Éprouve le frisson sacré de la renaissance.
+                      Prépare-toi à un regain d'adrénaline. Ressens l'impact d'une motivation brute et implacable.
                     </p>
                   </div>
 
@@ -734,10 +791,10 @@ export default function App() {
                     
                     <div className="max-w-xs space-y-2">
                       <h4 className="font-display text-sm font-semibold text-slate-300">
-                        L'Autel attend l'Esprit
+                        Ton coach est prêt
                       </h4>
                       <p className="text-xs text-slate-500 leading-relaxed font-sans">
-                        Saisis ton nom, choisis ta confession intime et appuie sur <span className="text-amber-400">Motive-Moi</span> pour faire descendre les paroles d'or de Cephboy AI Coach.
+                        Saisis ton prénom, sélectionne ton défi ou décris ton objectif, puis clique sur <span className="text-amber-400">Motive-Moi</span> pour générer ton boost mental.
                       </p>
                     </div>
 
@@ -746,7 +803,7 @@ export default function App() {
                         onClick={() => handleMotivateMe()}
                         className="py-2 px-5 rounded-lg bg-slate-900 hover:bg-slate-850 hover:text-amber-400 transition text-[11px] font-mono border border-slate-850 flex items-center gap-2 text-slate-400"
                       >
-                        <span>Motivation instantanée (Guerrier)</span>
+                        <span>Motivation instantanée</span>
                         <ChevronRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -775,17 +832,24 @@ export default function App() {
                           </div>
                           <div>
                             <span className="font-mono text-[9px] text-amber-500 uppercase tracking-widest">
-                              L'ORACLE DE CEPHBOY
+                              DISCOURS DE MOTIVATION
                             </span>
                             <h4 className="font-display text-sm font-semibold text-slate-200">
-                              Parole Sacrée de Motivation
+                              Motivation Cinématique
                             </h4>
                           </div>
                         </div>
 
                         {/* Top controls: Stop / Save / Close */}
-                        <div className="flex gap-2.5 w-full sm:w-auto">
-                          {currentAudioBase64 && (
+                        <div className="flex flex-wrap gap-2.5 w-full sm:w-auto">
+                          {isVoiceLoading && (
+                            <div className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-mono animate-pulse">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                              <span>VOIX EN COURS DE FORGE...</span>
+                            </div>
+                          )}
+
+                          {!isVoiceLoading && currentAudioBase64 && (
                             <button
                               id="btn_play_climax"
                               onClick={() => triggerVoicePlayback(currentAudioBase64, "sentence")}
@@ -793,6 +857,17 @@ export default function App() {
                             >
                               <Play className="w-3.5 h-3.5 fill-current" />
                               <span>ÉCOUTER LA VOIX</span>
+                            </button>
+                          )}
+
+                          {!isVoiceLoading && currentAudioBase64 && (
+                            <button
+                              onClick={() => downloadPCMAsWav(currentAudioBase64, `cephboy-motivation-${userName || "champion"}.wav`)}
+                              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-slate-800 bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-amber-400 text-xs font-mono transition-all active:scale-95"
+                              title="Télécharger l'audio au format WAV"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              <span>TÉLÉCHARGER</span>
                             </button>
                           )}
                           
@@ -872,7 +947,7 @@ export default function App() {
                           }}
                           className="w-full sm:w-auto px-4 py-2 border border-slate-850 hover:border-slate-700 bg-slate-950 hover:bg-slate-900 rounded-xl text-xs font-mono text-slate-300 hover:text-slate-100 transition whitespace-nowrap"
                         >
-                          Demander un Autre Oracle
+                          Nouveau discours de motivation
                         </button>
 
                       </div>

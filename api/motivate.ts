@@ -91,35 +91,37 @@ export default async function handler(req: any, res: any) {
   try {
     const { userState, userName, customContext } = req.body;
 
-    const name = userName?.trim() || "Guerrier";
-    let prompt = `Tu es "Cephboy AI Coach", le Maître de l'Élévation et de la motivation émotionnelle profonde. 
+    const name = userName?.trim() || "Champion";
+    let prompt = `Tu es "Cephboy AI Coach", la voix off légendaire et le mentor ultime issu des plus grands films de sport et vidéos de motivation de l'histoire (type Rocky, Any Given Sunday, Creed).
 L'utilisateur s'appelle "${name}".
-Son état d'esprit / défi actuel est : "${userState}".
+Son défi ou état d'esprit actuel est : "${userState}".
 `;
 
     if (customContext && customContext.trim().length > 0) {
-      prompt += `Voici sa propre confession intime sur ce qu'il traverse en ce moment : "${customContext}".\n`;
+      prompt += `Voici ce qu'il traverse ou cherche à surmonter actuellement : "${customContext}".\n`;
     }
 
     prompt += `
-Rédige une unique parole de motivation d'une force tragique, poétique, noble et d'une intensité lumineuse absolue.
-L'utilisateur doit ressentir un soulagement instantané et une fureur de vivre douce mais inébranlable.
+Rédige une unique parole choc de motivation d'un dynamisme cinématographique foudroyant et d'une force brute absolue.
+L'utilisateur doit ressentir un frisson immédiat de discipline, d'action et une détermination d'acier.
 
-CONSIGNES DE STYLES CHIRURGICALES POUR UNE RAPIDITÉ EXTALTEE :
-1. PAS DE PHRASES CLICHÉES : Évite le développement personnel superficiel (ne dis pas "crois en tes rêves", "fais des plans").
-2. ADRESSE À L'ÂME : Parle avec splendeur et humilité chrétienne ou spirituelle pure.
-3. LONGUEUR MAXIMUM : Rédige EXACTEMENT 1 à 2 phrases courtes et denses. Maximum 30-35 mots au total.
-4. FORMAT : Entoure TOUT le texte généré par des double astérisques comme ceci : **[Ton message ici]**
+CONSIGNES DE MOTIVATION CINÉMATOGRAPHIQUE CHIRURGICALE :
+1. INTERDICTION DE MOTS CLICHÉS DE JEU DE RÔLE : N'utilise JAMAIS les mots "guerrier", "guerrière", "soldat", "titan", "colosse", "divin", "sacré", "céleste", "oracle", "château", "royaume", "prêtre", "temple", "sacrement", "sermon", "conquérant", "abîme", "parchemin". Ces clichés de fantaisie médiévale sont proscrits.
+2. DISCIPLINE ET ACTIONS CONCRÈTES : Parle de sueur, de persévérance, d'honorer ses engagements secrets, d'endurer l'effort, de se relever à chaque coup et de se concentrer sur l'objectif présent. Pas de développement personnel superficiel.
+3. CONSIGNE ABSOLUE DE DÉPART : Ne commence JAMAIS la phrase générée par un prénom, un mot de salutation, ou une interpellation (comme 'Champion, ...', 'Sébastien, ...', 'Guerrier, ...', 'Écoute-moi', etc.). Entre DIRECTEMENT dans le vif du sujet et la motivation brute dès le tout premier mot. Tu n'as pas de temps à perdre avec des préambules.
+4. ADRESSE DIRECTE : Parle-lui directement de manière fraternelle et intense, comme un coach sportif de haut niveau sur le terrain. Tu peux utiliser son prénom ou le mot "Champion" uniquement vers le milieu ou la fin, JAMAIS au début.
+5. LONGUEUR MAXIMUM : Rédige EXACTEMENT 2 phrases très denses et ultra-impactantes. Maximum 35 mots au total.
+6. FORMAT : Entoure TOUT le texte généré par des double astérisques comme ceci : **[Ton message ici]**
 
-Pas de salutations, pas d'introduction, va droit à la vérité divine du conquérant blessé.
+Pas d'introduction, pas de politesse, aucun nom ou surnom en tout premier mot de la phrase, va immédiatement droit au but avec la force des tripes.
 `;
 
     // Use robust generation with model fallbacks to shield against high demand
     const response = await generateContentWithFallback({
       contents: prompt,
       config: {
-        temperature: 0.90,
-        systemInstruction: "Tu es Cephboy AI Coach, un phare céleste grandiose d'une bienveillance infinie et d'une force titanesque. Ton verbe français est poignardant de sincérité, ultra court, poétique et foudroyant de motivation.",
+        temperature: 0.95,
+        systemInstruction: "Tu es Cephboy AI Coach, la voix off moderne et ultra-impactante des plus grands films de sport et vidéos de motivation. Ton verbe français est ancré dans la réalité, direct, plein de tripes, axé sur la discipline, l'effort physique et mental, et l'action. Tu bannis les termes de fantaisie médiévale comme 'guerrier' ou 'divin'. Tu ne commences JAMAIS tes phrases par un prénom ou une interpellation d'accueil.",
       }
     });
 
@@ -144,24 +146,11 @@ Pas de salutations, pas d'introduction, va droit à la vérité divine du conqu�
     // Set text to be the exact same victory sentence without outer asterisks to keep single short representation
     text = victorySentence;
 
-    // Generate dramatic direct French TTS with retry
-    let audioBase64 = null;
-    try {
-      const ttsText = `Dis d'un ton solennel, majestueux et vibrant, avec lenteur en français : ${victorySentence}`;
-      const ttsResponse = await generateTTSWithRetry(ttsText, 'Zephyr');
-
-      const part = ttsResponse.candidates?.[0]?.content?.parts?.[0];
-      if (part?.inlineData?.data) {
-        audioBase64 = part.inlineData.data;
-      }
-    } catch (ttsErr) {
-      console.error("TTS generation failed, bypassing gracefully:", ttsErr);
-    }
-
+    // Quick text return - TTS is requested lazy asynchronously from the frontend to optimize load speed to the absolute speed of light!
     return res.status(200).json({
       text,
       victorySentence,
-      audioBase64
+      audioBase64: null
     });
   } catch (error: any) {
     console.error("Error in serverless /api/motivate:", error);

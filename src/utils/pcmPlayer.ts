@@ -73,3 +73,64 @@ export function playRawPCM(base64Data: string, sampleRate = 24000, onEnded?: () 
     return null;
   }
 }
+
+export function downloadPCMAsWav(base64Data: string, filename = "cephboy-motivation.wav", sampleRate = 24000) {
+  try {
+    const binary = atob(base64Data);
+    const len = binary.length;
+    const buffer = new ArrayBuffer(44 + len);
+    const view = new DataView(buffer);
+
+    const writeString = (view: DataView, offset: number, str: string) => {
+      for (let i = 0; i < str.length; i++) {
+        view.setUint8(offset + i, str.charCodeAt(i));
+      }
+    };
+
+    /* RIFF identifier */
+    writeString(view, 0, 'RIFF');
+    /* file length = chunk size = 36 + data size */
+    view.setUint32(4, 36 + len, true);
+    /* RIFF type */
+    writeString(view, 8, 'WAVE');
+    /* format chunk identifier */
+    writeString(view, 12, 'fmt ');
+    /* format chunk length */
+    view.setUint32(16, 16, true);
+    /* sample format (1 = raw PCM) */
+    view.setUint16(20, 1, true);
+    /* channel count (1 = mono) */
+    view.setUint16(22, 1, true);
+    /* sample rate */
+    view.setUint32(24, sampleRate, true);
+    /* byte rate = sampleRate * channels * bytesPerSample */
+    view.setUint32(28, sampleRate * 2, true);
+    /* block align = channels * bytesPerSample */
+    view.setUint16(32, 2, true);
+    /* bits per sample */
+    view.setUint16(34, 16, true);
+    /* data chunk identifier */
+    writeString(view, 36, 'data');
+    /* data chunk length */
+    view.setUint32(40, len, true);
+
+    // Write samples
+    const bytes = new Uint8Array(buffer, 44);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+
+    const blob = new Blob([buffer], { type: 'audio/wav' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error("Error generating WAV file for download:", err);
+    alert("Impossible de générer le fichier audio pour le téléchargement.");
+  }
+}

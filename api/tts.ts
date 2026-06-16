@@ -58,13 +58,14 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { text } = req.body;
+    const { text, voiceGender } = req.body;
     if (!text || text.trim().length === 0) {
       return res.status(400).json({ error: "Du texte est requis pour la génération vocale." });
     }
 
-    const ttsText = `Dis d'un ton paternel extrêmement chaleureux, profond et ému en français : ${text.substring(0, 300)}`;
-    const ttsResponse = await generateTTSWithRetry(ttsText, 'Zephyr');
+    const selectedVoice = voiceGender === "female" ? "Aoede" : "Charon";
+    const ttsText = `Dis d'un ton chaleureux, profond et déterminé en français : ${text.substring(0, 300)}`;
+    const ttsResponse = await generateTTSWithRetry(ttsText, selectedVoice);
 
     const audio = ttsResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || null;
     return res.status(200).json({ audioBase64: audio });
