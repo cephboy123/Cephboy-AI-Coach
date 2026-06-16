@@ -680,10 +680,7 @@ export default function App() {
     const saved = localStorage.getItem("cephboy_voice_gender");
     return (saved === "male" || saved === "female") ? saved : "male";
   });
-  const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
-    const saved = localStorage.getItem("cephboy_language");
-    return saved || "English";
-  });
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("English");
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState<boolean>(false);
 
   // UI state
@@ -1075,7 +1072,7 @@ export default function App() {
                 Cephboy AI Coach
               </h1>
               <p className="font-mono text-[9.5px] text-amber-500/60 uppercase tracking-widest flex items-center gap-1">
-                <TrendingUp className="w-3 h-3 text-amber-500" /> {UI_TEXTS[selectedLanguage]?.["tagline"] || "Le Maître de l'Éveil Émotionnel v1.1.0"}
+                <TrendingUp className="w-3 h-3 text-amber-500" /> {UI_TEXTS[selectedLanguage]?.["tagline"] || "The Master of Emotional Awakening v1.1.0"}
               </p>
             </div>
           </div>
@@ -1161,12 +1158,12 @@ export default function App() {
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                   </span>
                   <Volume2 className="w-3.5 h-3.5 animate-bounce" />
-                  <span>{UI_TEXTS[selectedLanguage]?.["ambiance_on"] || "AMBIANCE CINÉMATIQUE ACTIVÉE"}</span>
+                  <span>{UI_TEXTS[selectedLanguage]?.["ambiance_on"] || "CINEMATIC AMBIANCE ACTIVE"}</span>
                 </>
               ) : (
                 <>
                   <VolumeX className="w-3.5 h-3.5" />
-                  <span>{UI_TEXTS[selectedLanguage]?.["ambiance_off"] || "ACTIVER L'AMBIANCE SONORE"}</span>
+                  <span>{UI_TEXTS[selectedLanguage]?.["ambiance_off"] || "ACTIVATE SOUND AMBIANCE"}</span>
                 </>
               )}
             </button>
@@ -1182,7 +1179,7 @@ export default function App() {
                     : "text-slate-400 hover:text-slate-200"
                 }`}
               >
-                {UI_TEXTS[selectedLanguage]?.["tab_coach"] || "L'Autel du Coach"}
+                {UI_TEXTS[selectedLanguage]?.["tab_coach"] || "The Coach's Altar"}
               </button>
               <button
                 id="tab_journal"
@@ -1209,7 +1206,7 @@ export default function App() {
         <div className="max-w-2xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 border border-slate-800 rounded-full font-mono text-[10.5px] tracking-wide text-amber-500">
             <Sparkles className="w-3.5 h-3.5 animate-spin text-amber-400" />
-            <span>{UI_TEXTS[selectedLanguage]?.["banner_badge"] || "UN DIALOGUE DIRECT ENTRE DEUX ÂMES INTENSES"}</span>
+            <span>{UI_TEXTS[selectedLanguage]?.["banner_badge"] || "A DIRECT DIALOGUE BETWEEN TWO INTENSE SOULS"}</span>
           </div>
           
           <h2 className="font-display text-4xl sm:text-5xl font-extrabold tracking-wider text-slate-100 leading-tight">
@@ -1220,14 +1217,14 @@ export default function App() {
           </h2>
           
            <p className="text-slate-400 text-sm max-w-lg mx-auto font-sans leading-relaxed">
-            {UI_TEXTS[selectedLanguage]?.["banner_desc"] || "Cephboy AI Coach n'est pas un conseiller ordinaire. Il cible tes doutes réels, t'apporte la rigueur mentale nécessaire et te pousse à agir immédiatement avec la force d'un discours de cinéma."}
+            {UI_TEXTS[selectedLanguage]?.["banner_desc"] || "Cephboy AI Coach is no ordinary advisor. He targets your real doubts, brings you the needed mental toughness, and pushes you to act immediately with the raw power of a cinematic speech."}
           </p>
 
           {showSynthTip && (
             <div className="p-3 bg-amber-500/5 max-w-md mx-auto rounded-xl border border-amber-500/10 text-xs text-amber-300 flex items-center justify-center gap-3">
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
               <p>
-                <strong>{UI_TEXTS[selectedLanguage]?.["synth_tip_title"] || "Conseil d'immersion :"}</strong> {UI_TEXTS[selectedLanguage]?.["synth_tip_desc"] || "Active l'Ambiance Sonore en haut à droite avant de lancer la motivation pour une immersion digne des plus grands films."}
+                <strong>{UI_TEXTS[selectedLanguage]?.["synth_tip_title"] || "Immersion Tip:"}</strong> {UI_TEXTS[selectedLanguage]?.["synth_tip_desc"] || "Activate the Sound Ambiance at the top right before starting the motivation for an experience worthy of the greatest movies."}
               </p>
             </div>
           )}
@@ -1516,7 +1513,7 @@ export default function App() {
               <div className="lg:col-span-7 space-y-6">
                 
                 <h3 className="font-display text-xl font-semibold text-amber-400 tracking-wider border-b border-slate-900 pb-3 h-9 flex items-center gap-2 animate-fadeIn">
-                  <Quote className="w-5 h-5 text-amber-500 animate-pulse" /> {UI_TEXTS[selectedLanguage]?.["result_title"] || "La Parole de Cephboy"}
+                  <Quote className="w-5 h-5 text-amber-500 animate-pulse" /> {UI_TEXTS[selectedLanguage]?.["result_title"] || "Cephboy's Word"}
                 </h3>
 
                 {/* LOADING SCREEN WITH MULTI-STEP POETRY */}
@@ -1532,7 +1529,7 @@ export default function App() {
 
                     <div className="space-y-4 max-w-sm">
                       <h4 className="font-display text-lg text-slate-200 tracking-wider">
-                        {UI_TEXTS[selectedLanguage]?.["loading_title"] || "LA FORGE EST EN ACTION"}
+                        {UI_TEXTS[selectedLanguage]?.["loading_title"] || "THE FORGE IS IN ACTION"}
                       </h4>
                       
                       <div className="h-6 overflow-hidden relative">
@@ -1550,7 +1547,7 @@ export default function App() {
                     </div>
 
                     <p className="text-xs text-slate-500 italic max-w-xs leading-relaxed">
-                      "{UI_TEXTS[selectedLanguage]?.["loading_quote"] || "Dans le silence de l'abîme réside la plus pure forme de ta lumière. Ne crains pas les larmes, elles nettoient ton regard."}"
+                      "{UI_TEXTS[selectedLanguage]?.["loading_quote"] || "In the silence of the abyss lies the cleanest form of your light. Do not fear tears, they wash clean your gaze."}"
                     </p>
 
                   </div>
@@ -1565,10 +1562,10 @@ export default function App() {
                     
                     <div className="max-w-xs space-y-2">
                       <h4 className="font-display text-sm font-semibold text-slate-300">
-                        {UI_TEXTS[selectedLanguage]?.["ready_title"] || "Ton coach est prêt"}
+                        {UI_TEXTS[selectedLanguage]?.["ready_title"] || "Your coach is ready"}
                       </h4>
                       <p className="text-xs text-slate-500 leading-relaxed font-sans">
-                        {UI_TEXTS[selectedLanguage]?.["ready_desc"] || "Saisis ton prénom, sélectionne ton défi ou décris ton objectif, puis clique sur Motive-Moi pour générer ton boost mental."}
+                        {UI_TEXTS[selectedLanguage]?.["ready_desc"] || "Enter your name, select your challenge or describe your goal, then click Motivate Me to generate your mental boost."}
                       </p>
                     </div>
 
@@ -1577,7 +1574,7 @@ export default function App() {
                         onClick={() => handleMotivateMe()}
                         className="py-2 px-5 rounded-lg bg-slate-900 hover:bg-slate-850 hover:text-amber-400 transition text-[11px] font-mono border border-slate-850 flex items-center gap-2 text-slate-400"
                       >
-                        <span>{UI_TEXTS[selectedLanguage]?.["btn_instant_motivation"] || "Motivation instantanée"}</span>
+                        <span>{UI_TEXTS[selectedLanguage]?.["btn_instant_motivation"] || "Instant motivation"}</span>
                         <ChevronRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -1608,14 +1605,14 @@ export default function App() {
                           </div>
                           <div>
                             <span className="font-mono text-[9px] text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
-                              <span>DISCOURS DE MOTIVATION</span>
+                              <span>{selectedLanguage === "French" ? "DISCOURS DE MOTIVATION" : "MOTIVATION SPEECH"}</span>
                               <span className="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-300 text-[8px] flex items-center gap-1">
                                 <span>{(LANGUAGES.find(l => l.code === selectedLanguage) || LANGUAGES[0]).flag}</span>
                                 <span>{(LANGUAGES.find(l => l.code === selectedLanguage) || LANGUAGES[0]).label.toUpperCase()}</span>
                               </span>
                             </span>
                             <h4 className="font-display text-sm font-semibold text-slate-200">
-                              Motivation Cinématique
+                              {selectedLanguage === "French" ? "Motivation Cinématique" : "Cinematic Motivation"}
                             </h4>
                           </div>
                         </div>
@@ -1635,10 +1632,10 @@ export default function App() {
                                   ? "bg-amber-500/10 border border-amber-500/30 text-amber-300 shadow-inner"
                                   : "text-slate-500 hover:text-slate-300 border border-transparent"
                               }`}
-                              title="Voix Homme"
+                              title={UI_TEXTS[selectedLanguage]?.["voice_male"] || "Male Voice"}
                             >
                               <User className="w-3 h-3 text-amber-500" />
-                              <span>HOMME</span>
+                              <span>{UI_TEXTS[selectedLanguage]?.["speech_gender_male"] || "MALE"}</span>
                             </button>
                             <button
                               onClick={() => {
@@ -1650,17 +1647,17 @@ export default function App() {
                                   ? "bg-amber-500/10 border-amber-500/30 text-amber-300 shadow-inner"
                                   : "text-slate-500 hover:text-slate-300 border border-transparent"
                               }`}
-                              title="Voix Femme"
+                              title={UI_TEXTS[selectedLanguage]?.["voice_female"] || "Female Voice"}
                             >
                               <User className="w-3 h-3 text-emerald-500" />
-                              <span>FEMME</span>
+                              <span>{UI_TEXTS[selectedLanguage]?.["speech_gender_female"] || "FEMALE"}</span>
                             </button>
                           </div>
 
                           {isVoiceLoading && (
                             <div className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-mono animate-pulse">
                               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
-                              <span>VOIX EN COURS DE FORGE...</span>
+                              <span>{UI_TEXTS[selectedLanguage]?.["speech_loading_audio"] || "FORGING VOICE..."}</span>
                             </div>
                           )}
 
@@ -1671,7 +1668,7 @@ export default function App() {
                               className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition shadow-md shadow-amber-500/10 active:scale-95"
                             >
                               <Play className="w-3.5 h-3.5 fill-current" />
-                              <span>ÉCOUTER LA VOIX</span>
+                              <span>{UI_TEXTS[selectedLanguage]?.["speech_btn_play"] || "LISTEN TO VOICE"}</span>
                             </button>
                           )}
 
@@ -1679,10 +1676,10 @@ export default function App() {
                             <button
                               onClick={() => downloadPCMAsWav(currentAudioBase64, `cephboy-motivation-${userName || "champion"}.wav`)}
                               className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-slate-800 bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-amber-400 text-xs font-mono transition-all active:scale-95"
-                              title="Télécharger l'audio au format WAV"
+                              title={selectedLanguage === "French" ? "Télécharger l'audio au format WAV" : "Download audio as WAV"}
                             >
                               <Download className="w-3.5 h-3.5" />
-                              <span>TÉLÉCHARGER</span>
+                              <span>{UI_TEXTS[selectedLanguage]?.["speech_btn_download"] || "DOWNLOAD"}</span>
                             </button>
                           )}
                           
@@ -1690,7 +1687,7 @@ export default function App() {
                             <button
                               onClick={stopVoice}
                               className="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-red-400/30 hover:text-red-400 text-slate-500 transition"
-                              title="Taire le Coach"
+                              title={selectedLanguage === "French" ? "Taire le Coach" : "Silence the Coach"}
                             >
                               <Square className="w-4 h-4 fill-current" />
                             </button>
@@ -1708,12 +1705,12 @@ export default function App() {
                             {isCurrentSaved ? (
                               <>
                                 <BookmarkCheck className="w-3.5 h-3.5" />
-                                <span>CONSERVÉ</span>
+                                <span>{UI_TEXTS[selectedLanguage]?.["speech_btn_save_ok"] || "ENGRAVED"}</span>
                               </>
                             ) : (
                               <>
                                 <Bookmark className="w-3.5 h-3.5" />
-                                <span>GRAVER</span>
+                                <span>{UI_TEXTS[selectedLanguage]?.["speech_btn_save_un"] || "ENGRAVE"}</span>
                               </>
                             )}
                           </button>
@@ -1721,17 +1718,17 @@ export default function App() {
                           <button
                             onClick={handleCopy}
                             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-mono transition-all bg-slate-950 border-slate-800 hover:bg-slate-900 text-slate-400 hover:text-amber-400`}
-                            title="Copier la motivation"
+                            title={selectedLanguage === "French" ? "Copier la motivation" : "Copy motivation"}
                           >
                             {isCopied ? (
                               <>
                                 <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                <span className="text-emerald-400 font-bold">COPIÉ !</span>
+                                <span className="text-emerald-400 font-bold">{UI_TEXTS[selectedLanguage]?.["speech_btn_copied"] || "COPIED!"}</span>
                               </>
                             ) : (
                               <>
                                 <Copy className="w-3.5 h-3.5" />
-                                <span>COPIER</span>
+                                <span>{UI_TEXTS[selectedLanguage]?.["speech_btn_copy"] || "COPY"}</span>
                               </>
                             )}
                           </button>
@@ -1751,7 +1748,7 @@ export default function App() {
                         
                         <div className="flex items-center gap-2 text-xs font-mono text-slate-500">
                           <Eye className="w-4 h-4 text-amber-500/70" />
-                          <span>Prends de grandes inspirations lentes.</span>
+                          <span>{UI_TEXTS[selectedLanguage]?.["breath_tip"] || "Take deep, slow breaths."}</span>
                         </div>
 
                         <button
@@ -1762,7 +1759,7 @@ export default function App() {
                           }}
                           className="w-full sm:w-auto px-4 py-2 border border-slate-850 hover:border-slate-700 bg-slate-950 hover:bg-slate-900 rounded-xl text-xs font-mono text-slate-300 hover:text-slate-100 transition whitespace-nowrap"
                         >
-                          Nouveau discours de motivation
+                          {UI_TEXTS[selectedLanguage]?.["btn_new_speech"] || "New motivation speech"}
                         </button>
 
                       </div>
