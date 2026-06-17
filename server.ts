@@ -3,7 +3,6 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 import motivateHandler from "./api/motivate";
-import ttsHandler from "./api/tts";
 
 dotenv.config();
 
@@ -27,7 +26,6 @@ async function startServer() {
 
   // Mount adapted Vercel API handlers directly for our local Express & Dev environment
   app.post("/api/motivate", vercelAdapter(motivateHandler));
-  app.post("/api/tts", vercelAdapter(ttsHandler));
 
   // Serve static UI assets and handle hot reloading or routing
   if (process.env.NODE_ENV !== "production") {

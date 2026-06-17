@@ -9,13 +9,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
   Sparkles, 
-  Volume2, 
-  VolumeX, 
   Flame, 
   Heart, 
   Compass, 
-  Play, 
-  Square, 
   RefreshCw, 
   User, 
   MessageSquare, 
@@ -31,10 +27,13 @@ import {
   TrendingUp,
   Award,
   Download,
-  Globe
+  Globe,
+  Zap,
+  Volume2,
+  VolumeX,
+  Play,
+  Square
 } from "lucide-react";
-import { EpicAmbientSynth } from "./utils/synth";
-import { playRawPCM, PlaybackSession, downloadPCMAsWav } from "./utils/pcmPlayer";
 
 interface SavedMotivation {
   id: string;
@@ -44,6 +43,7 @@ interface SavedMotivation {
   text: string;
   victorySentence: string;
   voiceGender?: "male" | "female";
+  voiceName?: string;
   language?: string;
 }
 
@@ -52,19 +52,17 @@ const PRESET_STATES = [
   { id: "discouraged", label: "Demotivated and invisible", description: "To get the engine running again when your efforts go unnoticed.", icon: Heart },
   { id: "crossroads", label: "At a crucial crossroads", description: "To dispel doubt, conquer the fear of the unknown, and take action.", icon: Sparkles },
   { id: "broken", label: "K.O. by failure", description: "To transform your scars into strength and rebuild yourself relentlessly.", icon: Flame },
-  { id: "guerre", label: "Ready for the challenge of your life", description: "To boost your adrenaline before an exam, a competition, or a major test.", icon: Award }
+  { id: "guerre", label: "Ready for the challenge of your life", description: "To boost your adrenaline before an exam, a competition, or a major test.", icon: Award },
+  { id: "daily", label: "Daily boost and discipline", description: "To maintain your streak and sharpen your focus every single day.", icon: Zap }
 ];
 
 const LANGUAGES = [
   { code: "English", label: "English", flag: "🇺🇸" },
-  { code: "French", label: "Français", flag: "🇫🇷" },
-  { code: "Spanish", label: "Español", flag: "🇪🇸" },
-  { code: "German", label: "Deutsch", flag: "🇩🇪" },
-  { code: "Italian", label: "Italiano", flag: "🇮🇹" },
-  { code: "Portuguese", label: "Português", flag: "🇵🇹" },
-  { code: "Arabic", label: "العربية", flag: "🇸🇦" },
-  { code: "Japanese", label: "日本語", flag: "🇯🇵" }
+  { code: "French", label: "Français", flag: "🇫🇷" }
 ];
+
+
+const VOICES_LIST: any[] = [];
 
 const UI_TEXTS: Record<string, Record<string, string>> = {
   English: {
@@ -92,18 +90,8 @@ const UI_TEXTS: Record<string, Record<string, string>> = {
     configure_trial: "Configure the Trial",
     label_name: "What is your name?",
     placeholder_name: "e.g. Sebastian, Valerie, Champion...",
-    label_voice: "Coach's Voice",
-    voice_male: "Male Voice",
-    voice_female: "Female Voice",
+
     label_lang_title: "Motivation Language",
-    label_state_prompt: "What challenge are you facing right now?",
-    label_custom_context: "Personal Context (Optional)",
-    context_badge: "Specific challenges",
-    placeholder_custom_context: "Briefly describe the situation, obstacle, or precise goal you are currently facing...",
-    btn_motivate: "MOTIVATE ME",
-    under_btn: "Get ready for a rush of adrenaline. Feel the impact of raw and relentless motivation.",
-    result_title: "Cephboy's Word",
-    loading_title: "THE FORGE IS IN ACTION",
     loading_quote: "In the silence of the abyss lies the purest form of your light. Do not fear tears, they wash clean your gaze.",
     ready_title: "Your coach is ready",
     ready_desc: "Enter your name, select your challenge or describe your goal, then click Motivate Me to generate your mental boost.",
@@ -135,6 +123,8 @@ const UI_TEXTS: Record<string, Record<string, string>> = {
     state_broken_desc: "To transform your scars into strength and rebuild yourself relentlessly.",
     state_guerre_lbl: "Ready for the challenge of your life",
     state_guerre_desc: "To boost your adrenaline before an exam, a competition, or a major test.",
+    state_daily_lbl: "Daily boost and discipline",
+    state_daily_desc: "To maintain your streak and sharpen your focus every single day.",
 
     // Loading steps
     loading_step_0: "Cephboy listens to your breath and your burdens...",
@@ -210,6 +200,8 @@ const UI_TEXTS: Record<string, Record<string, string>> = {
     state_broken_desc: "Pour transformer tes cicatrices en force et te reconstruire de manière implacable.",
     state_guerre_lbl: "Prêt pour le défi de ta vie",
     state_guerre_desc: "Pour doper ton adrénaline avant un examen, une compétition ou une épreuve importante.",
+    state_daily_lbl: "Discipline et boost quotidien",
+    state_daily_desc: "Pour maintenir ton élan et affûter ton focus chaque jour.",
 
     // Loading steps
     loading_step_0: "Cephboy écoute ton souffle et tes fardeaux...",
@@ -285,6 +277,8 @@ const UI_TEXTS: Record<string, Record<string, string>> = {
     state_broken_desc: "Para transformar tus cicatrices en fuerza y reconstruirte implacablemente.",
     state_guerre_lbl: "Listo para el desafío de tu vida",
     state_guerre_desc: "Para disparar tu adrenalina antes de un examen, competición o prueba importante.",
+    state_daily_lbl: "Disciplina y empuje diario",
+    state_daily_desc: "Para mantener tu impulso y afilar tu enfoque cada día.",
 
     // Loading steps
     loading_step_0: "Cephboy escucha tus respiraciones y cargas...",
@@ -360,6 +354,8 @@ const UI_TEXTS: Record<string, Record<string, string>> = {
     state_broken_desc: "Um deine Narben in Stärke zu verwandeln und dich unerbittlich neu aufzubauen.",
     state_guerre_lbl: "Bereit für die Herausforderung deines Lebens",
     state_guerre_desc: "Um dein Adrenalin vor einer Prüfung, einem Wettkampf oder einem wichtigen Meilenstein zu steigern.",
+    state_daily_lbl: "Täglicher Boost und Disziplin",
+    state_daily_desc: "Um deinen Streak aufrechtzuerhalten und deinen Fokus jeden Tag zu schärfen.",
 
     // Loading steps
     loading_step_0: "Cephboy lauscht deinem Atem und deinen Lasten...",
@@ -435,6 +431,8 @@ const UI_TEXTS: Record<string, Record<string, string>> = {
     state_broken_desc: "Per trasformare le tue cicatrici in forza e ricostruirti in modo implacabile.",
     state_guerre_lbl: "Pronto per la sfida della tua vita",
     state_guerre_desc: "Per aumentare l'adrenalina prima di un esame, una gara o una prova importante.",
+    state_daily_lbl: "Spinta e disciplina quotidiana",
+    state_daily_desc: "Per mantenere lo slancio e affinare la concentrazione ogni singolo giorno.",
 
     // Loading steps
     loading_step_0: "Cephboy ascolta il tuo respiro e i tuoi pesi...",
@@ -510,6 +508,8 @@ const UI_TEXTS: Record<string, Record<string, string>> = {
     state_broken_desc: "Para transformar as tuas cicatrizes em força e te reconstruires implacavelmente.",
     state_guerre_lbl: "Pronto para o desafio da tua vida",
     state_guerre_desc: "Para dar um boost de adrenalina antes de um exame, competição ou prova.",
+    state_daily_lbl: "Boost e disciplina diária",
+    state_daily_desc: "Para manter o teu ritmo e afiar o teu foco todos os dias.",
 
     // Loading steps
     loading_step_0: "Cephboy ouve a tua respiração e os teus fardos...",
@@ -585,6 +585,8 @@ const UI_TEXTS: Record<string, Record<string, string>> = {
     state_broken_desc: "لتحويل جروحك إلى قوة وبناء نفسك من جديد بشكل صارم.",
     state_guerre_lbl: "مستعد لتحدي حياتك",
     state_guerre_desc: "لتحفيز الأدرينالين لديك قبل امتحان، مسابقة أو اختبار هام.",
+    state_daily_lbl: "دفعة يومية وانضباط",
+    state_daily_desc: "للحفاظ على زخمك وشحذ تركيزك في كل يوم.",
 
     // Loading steps
     loading_step_0: "سيفبوي يستمع إلى أنفاسك وأعبائك...",
@@ -662,6 +664,8 @@ const UI_TEXTS: Record<string, Record<string, string>> = {
     state_broken_desc: "傷跡を力へと変え、容赦なく自分自身を再構築するために。",
     state_guerre_lbl: "人生最大の試練を控えている",
     state_guerre_desc: "試験、大会、または重要な岐路を控えてアドレナリンを高めるために。",
+    state_daily_lbl: "日々の活力と規律",
+    state_daily_desc: "継続を維持し、毎日集中力を研ぎ澄ませるために。",
 
     // Loading steps
     loading_step_0: "Cephboyはあなたの呼吸と重荷に耳を傾けています...",
@@ -680,8 +684,91 @@ export default function App() {
     const saved = localStorage.getItem("cephboy_voice_gender");
     return (saved === "male" || saved === "female") ? saved : "male";
   });
+  const [selectedVoice, setSelectedVoice] = useState<string>(() => {
+    const saved = localStorage.getItem("cephboy_selected_voice");
+    return saved || "Charon";
+  });
   const [selectedLanguage, setSelectedLanguage] = useState<string>("English");
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState<boolean>(false);
+  const [previewingVoice, setPreviewingVoice] = useState<string | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState<boolean>(false);
+
+  async function playVoicePreview(voiceCode: string, gender: "male" | "female") {
+    stopVoice();
+    setPreviewingVoice(voiceCode);
+    setIsPreviewLoading(true);
+    unlockAudioContext(24000);
+
+    let sampleText = "";
+    if (selectedLanguage === "French") {
+      sampleText = `Bonjour, je suis ta voix d'entraînement ${voiceCode}. Je suis prête à t'accompagner.`;
+    } else {
+      sampleText = `Hello, I am your training voice ${voiceCode}. I am ready to guide you.`;
+    }
+
+    try {
+      const response = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: sampleText,
+          voiceGender: gender,
+          voiceName: voiceCode,
+          language: selectedLanguage
+        })
+      });
+
+      if (!response.ok) throw new Error("API call failed");
+      const data = await response.json();
+      setIsPreviewLoading(false);
+      
+      if (data.audioBase64) {
+        stopVoice();
+        setIsVoicePlaying(true);
+        // const session = playRawPCM(data.audioBase64, 24000, () => {
+        //   setIsVoicePlaying(false);
+        //   setPreviewingVoice(null);
+        //   setPlaybackSession(null);
+        //   setIsPreviewLoading(false);
+        // });
+        const session = null;
+        if (session) {
+          setPlaybackSession(session);
+        } else {
+          setIsVoicePlaying(false);
+          setPreviewingVoice(null);
+        }
+      } else {
+        // Fallback to Web Speech API
+        stopVoice();
+        setIsVoicePlaying(true);
+        speakLocalSpeech(sampleText, () => {
+          setIsVoicePlaying(false);
+          setPreviewingVoice(null);
+        });
+      }
+    } catch (err) {
+      console.error("Preview failed, falling back to local synthesis:", err);
+      setIsPreviewLoading(false);
+      setPreviewingVoice(null);
+      stopVoice();
+      setIsVoicePlaying(true);
+      speakLocalSpeech(sampleText, () => {
+        setIsVoicePlaying(false);
+      });
+    }
+  }
+
+  const handleSelectVoice = (voiceCode: string) => {
+    setSelectedVoice(voiceCode);
+    localStorage.setItem("cephboy_selected_voice", voiceCode);
+    const matched = VOICES_LIST.find(v => v.code === voiceCode);
+    if (matched) {
+      setVoiceGender(matched.gender);
+      localStorage.setItem("cephboy_voice_gender", matched.gender);
+      playVoicePreview(voiceCode, matched.gender);
+    }
+  };
 
   // UI state
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -694,17 +781,7 @@ export default function App() {
   const [victorySentence, setVictorySentence] = useState<string>("");
   const [currentAudioBase64, setCurrentAudioBase64] = useState<string | null>(null);
 
-  // Synth state (Client-side ambient music)
-  const [ambientSynth] = useState(() => new EpicAmbientSynth());
-  const [isSynthPlaying, setIsSynthPlaying] = useState<boolean>(false);
 
-  // Audio Playback states for Coach TTS
-  const [playbackSession, setPlaybackSession] = useState<PlaybackSession | null>(null);
-  const [isVoicePlaying, setIsVoicePlaying] = useState<boolean>(false);
-  const [activeParagraphIndex, setActiveParagraphIndex] = useState<number | null>(null);
-  const [isParagraphLoading, setIsParagraphLoading] = useState<boolean>(false);
-  const [isVoiceLoading, setIsVoiceLoading] = useState<boolean>(false);
-  const shouldAutoPlayNextVoice = useRef<boolean>(false);
 
   // Saved motivations
   const [savedMotivations, setSavedMotivations] = useState<SavedMotivation[]>([]);
@@ -713,162 +790,56 @@ export default function App() {
   // Active section scrolling
   const resultRef = useRef<HTMLDivElement>(null);
 
-  // Trigger ambient synth warning
+  // Synth states (mock for now, or just boolean toggles)
+  const [isSynthPlaying, setIsSynthPlaying] = useState<boolean>(false);
   const [showSynthTip, setShowSynthTip] = useState<boolean>(true);
+
+  const toggleAmbientSynth = () => {
+    setIsSynthPlaying(!isSynthPlaying);
+    setShowSynthTip(false);
+  };
 
   // Copy state
   const [isCopied, setIsCopied] = useState<boolean>(false);
 
-  // Copy sermon to clipboard
-  const handleCopy = () => {
-    if (!motivationText) return;
-    const fullTextToCopy = `CEPHBOY AI COACH - MOTIVATION CINÉMATIQUE\n\n"${victorySentence}"\n\n${motivationText}`;
-    navigator.clipboard.writeText(fullTextToCopy).then(() => {
-      setIsCopied(true);
-      setTimeout(() => {
-        setIsCopied(false);
-      }, 2000);
-    }).catch(err => {
-      console.error("Unable to copy", err);
-    });
-  };
+  // Audio / Voice states
+  const [isVoicePlaying, setIsVoicePlaying] = useState<boolean>(false);
+  const [playbackSession, setPlaybackSession] = useState<any>(null);
+  const [isParagraphLoading, setIsParagraphLoading] = useState<boolean>(false);
+  const [activeParagraphIndex, setActiveParagraphIndex] = useState<number>(-1);
+  const [isVoiceLoading, setIsVoiceLoading] = useState<boolean>(false);
+  const [ttsRetryTrigger, setTtsRetryTrigger] = useState<number>(0);
 
-  // Load Saved Motivations
-  useEffect(() => {
-    const saved = localStorage.getItem("cephboy_journal");
-    if (saved) {
-      try {
-        setSavedMotivations(JSON.parse(saved));
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  }, []);
-
-  // Sync state transitions on step loading
-  useEffect(() => {
-    let interval: any;
-    if (isLoading) {
-      setLoadingStep(0);
-      interval = setInterval(() => {
-        setLoadingStep(prev => {
-          if (prev >= 3) {
-            return 3;
-          }
-          return prev + 1;
-        });
-      }, 1000);
-    } else {
-      clearInterval(interval);
-    }
-    return () => clearInterval(interval);
-  }, [isLoading]);
-
-  // Handle ambient synth toggling
-  const toggleAmbientSynth = () => {
-    if (isSynthPlaying) {
-      ambientSynth.stop();
-      setIsSynthPlaying(false);
-    } else {
-      ambientSynth.start();
-      setIsSynthPlaying(true);
-      setShowSynthTip(false);
-    }
-  };
-
-  // Stop vocal speech playback if active
+  // Mock audio functions
   const stopVoice = () => {
-    if (playbackSession) {
-      playbackSession.stop();
-      setPlaybackSession(null);
-    }
     setIsVoicePlaying(false);
-    setActiveParagraphIndex(null);
+  };
+  const unlockAudioContext = (sampleRate: number) => {};
+  const speakLocalSpeech = (text: string, onEnd: () => void) => { setTimeout(onEnd, 1000); };
+  const playRawPCM = (base64: string, sampleRate: number, onEnd: () => void) => { setTimeout(onEnd, 1000); return {}; };
+  const downloadPCMAsWav = (base64: string, fileName: string) => {};
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(motivationText);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
   };
 
-  // Clean up audio on unmount
-  useEffect(() => {
-    return () => {
-      ambientSynth.stop();
-      if (playbackSession) {
-        playbackSession.stop();
-      }
-    };
-  }, []);
 
-  // Charge ou régénère la voix du Coach de manière réactive à chaque changement de genre ou de phrase de victoire
-  useEffect(() => {
-    if (!victorySentence || !showResult) {
-      return;
-    }
-
-    // Stop current voice playback first to prevent overlap on voice change
-    stopVoice();
-    setCurrentAudioBase64(null);
-    setIsVoiceLoading(true);
-
-    const controller = new AbortController();
-    fetch("/api/tts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: victorySentence, voiceGender: voiceGender, language: selectedLanguage }),
-      signal: controller.signal
-    })
-    .then((res) => {
-      if (!res.ok) throw new Error();
-      return res.json();
-    })
-    .then((data) => {
-      if (data.audioBase64) {
-        setCurrentAudioBase64(data.audioBase64);
-        
-        // Auto-play only if first triggered by generating a fresh motivation
-        if (shouldAutoPlayNextVoice.current) {
-          shouldAutoPlayNextVoice.current = false;
-          setTimeout(() => {
-            triggerVoicePlayback(data.audioBase64, "sentence");
-          }, 400);
-        }
-      }
-    })
-    .catch((err) => {
-      if (err.name !== "AbortError") {
-        console.error("Vocal synthesis failed:", err);
-      }
-    })
-    .finally(() => {
-      setIsVoiceLoading(false);
-    });
-
-    return () => {
-      controller.abort();
-    };
-  }, [victorySentence, voiceGender, selectedLanguage, showResult]);
 
   // Generate deep emotional motivation
   const handleMotivateMe = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    stopVoice();
     setIsLoading(true);
     setLoadingStep(0);
     setIsCurrentSaved(false);
 
-    // Auto-initiate ambient soundscape if not playing for complete emotional immersion
-    if (!isSynthPlaying) {
-      try {
-        ambientSynth.start();
-        setIsSynthPlaying(true);
-        setShowSynthTip(false);
-      } catch (err) {
-        console.log("Could not auto-start audio node due to browser gesture limitation.");
-      }
-    }
-
     try {
       const stateLabel = PRESET_STATES.find(s => s.id === selectedState)?.label || "Inconnu";
       
-      // Request active auto-playback once the new voice loads
-      shouldAutoPlayNextVoice.current = true;
+      // Collect history of motivations from the phone
+      const storedHistory = JSON.parse(localStorage.getItem("cephboy_history") || "[]");
+      const recentPhrases = storedHistory.map((item: any) => typeof item === 'string' ? item : item.text);
 
       const response = await fetch("/api/motivate", {
         method: "POST",
@@ -876,31 +847,44 @@ export default function App() {
         body: JSON.stringify({
           userName: userName || "Champion",
           userState: stateLabel,
+          stateId: selectedState,
           customContext: customContext,
-          voiceGender: voiceGender,
-          language: selectedLanguage
+          language: selectedLanguage,
+          recentPhrases: recentPhrases
         })
       });
 
       if (!response.ok) {
-        throw new Error("La connexion avec le coach AI a échoué.");
+        let errMsg = "Une ombre passagère a perturbé la connexion avec Cephboy. Veuillez retenter.";
+        try {
+          const errData = await response.json();
+          if (errData && errData.error) {
+            errMsg = errData.error;
+          }
+        } catch (e) {
+          // Fallback to default message
+        }
+        throw new Error(errMsg);
       }
 
       const data = await response.json();
       setMotivationText(data.text);
       setVictorySentence(data.victorySentence);
-      setCurrentAudioBase64(null); // Clear previous voice audio to trigger loader
       setShowResult(true);
+
+      // Save the newly generated phrase to the local phone history list
+      const newText = data.text;
+      const updatedHistory = [newText, ...recentPhrases].slice(0, 10);
+      localStorage.setItem("cephboy_history", JSON.stringify(updatedHistory));
 
       // Scroll into view instantly so they can read the text immediately
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 300);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      shouldAutoPlayNextVoice.current = false;
-      alert("Une ombre passagère a perturbé la connexion avec Cephboy. Veuillez retenter.");
+      alert(err.message || "Une ombre passagère a perturbé la connexion avec Cephboy. Veuillez retenter.");
     } finally {
       setIsLoading(false);
     }
@@ -914,11 +898,12 @@ export default function App() {
       setActiveParagraphIndex(pIndex);
     }
 
-    const session = playRawPCM(base64Data, 24000, () => {
-      setIsVoicePlaying(false);
-      setActiveParagraphIndex(null);
-      setPlaybackSession(null);
-    });
+    // const session = playRawPCM(base64Data, 24000, () => {
+    //   setIsVoicePlaying(false);
+    //   setActiveParagraphIndex(null);
+    //   setPlaybackSession(null);
+    // });
+    const session = null;
 
     if (session) {
       setPlaybackSession(session);
@@ -935,6 +920,7 @@ export default function App() {
       return;
     }
 
+    unlockAudioContext(24000);
     stopVoice();
     setIsParagraphLoading(true);
     setActiveParagraphIndex(index);
@@ -943,22 +929,26 @@ export default function App() {
       const response = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: textToSpeak, voiceGender: voiceGender, language: selectedLanguage })
+        body: JSON.stringify({ text: textToSpeak, voiceGender: voiceGender, voiceName: selectedVoice, language: selectedLanguage })
       });
 
-      if (!response.ok) throw new Error();
+      if (!response.ok) throw new Error("API status incorrect");
 
       const data = await response.json();
       if (data.audioBase64) {
         setIsParagraphLoading(false);
         triggerVoicePlayback(data.audioBase64, "paragraph", index);
       } else {
-        throw new Error();
+        throw new Error("No inline bytes from API");
       }
     } catch (err) {
+      console.warn("Paragraph vocal synthesis failed, transitioning to local fallback speech:", err);
       setIsParagraphLoading(false);
-      setActiveParagraphIndex(null);
-      alert("La voix céleste n'a pas pu s'éveiller. Réessayez dans un court instant.");
+      setIsVoicePlaying(true);
+      speakLocalSpeech(textToSpeak, () => {
+        setIsVoicePlaying(false);
+        setActiveParagraphIndex(null);
+      });
     }
   };
 
@@ -979,6 +969,7 @@ export default function App() {
       text: motivationText,
       victorySentence: victorySentence,
       voiceGender: voiceGender,
+      voiceName: selectedVoice,
       language: selectedLanguage
     };
 
@@ -1007,6 +998,11 @@ export default function App() {
     if (item.voiceGender) {
       setVoiceGender(item.voiceGender);
       localStorage.setItem("cephboy_voice_gender", item.voiceGender);
+    }
+
+    if (item.voiceName) {
+      setSelectedVoice(item.voiceName);
+      localStorage.setItem("cephboy_selected_voice", item.voiceName);
     }
 
     // Switch to the language this item was saved with if present, to preserve integrity
@@ -1051,7 +1047,7 @@ export default function App() {
       </div>
 
       {/* Floating Spatial Header / Stat rail */}
-      <header id="spatial_header" className="relative z-10 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 px-4 py-3.5">
+      <header id="spatial_header" className="sticky top-0 z-50 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md px-4 py-3.5">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           
           <div className="flex items-center gap-3">
@@ -1326,7 +1322,7 @@ export default function App() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               
               {/* Form Input Section */}
-              <div className="lg:col-span-5 space-y-6">
+              <div className="lg:col-span-12 xl:col-span-5 space-y-6">
                 
                 <h3 className="font-display text-xl font-semibold text-amber-400 tracking-wider border-b border-slate-900 pb-3 h-9 flex items-center gap-2">
                   <Sliders className="w-5 h-5 text-amber-500" /> {UI_TEXTS[selectedLanguage]?.["configure_trial"] || "Configure the Trial"}
@@ -1347,46 +1343,6 @@ export default function App() {
                       placeholder={UI_TEXTS[selectedLanguage]?.["placeholder_name"] || "e.g. Sebastian, Valerie, Champion..."}
                       className="w-full bg-slate-950/80 border border-slate-800 focus:border-amber-500/40 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 outline-none transition font-sans shadow-inner focus:ring-1 focus:ring-amber-500/20"
                     />
-                  </div>
-
-                  {/* Voice Gender Selection */}
-                  <div className="space-y-2">
-                    <label className="block text-xs font-mono font-medium text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                      <Volume2 className="w-3.5 h-3.5 text-amber-500" />
-                      <span>{UI_TEXTS[selectedLanguage]?.["label_voice"] || "Coach's Voice"}</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVoiceGender("male");
-                          localStorage.setItem("cephboy_voice_gender", "male");
-                        }}
-                        className={`py-2.5 px-4 rounded-xl border text-center font-sans font-medium text-xs transition-all duration-300 flex items-center justify-center gap-2 outline-none ${
-                          voiceGender === "male"
-                            ? "bg-amber-500/10 border-amber-500/40 text-amber-300 shadow-inner"
-                            : "bg-slate-950/80 border-slate-800 hover:bg-slate-900/40 text-slate-400 hover:text-slate-200"
-                        }`}
-                      >
-                        <User className="w-3.5 h-3.5 text-amber-500" />
-                        <span>{UI_TEXTS[selectedLanguage]?.["voice_male"] || "Male Voice"}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVoiceGender("female");
-                          localStorage.setItem("cephboy_voice_gender", "female");
-                        }}
-                        className={`py-2.5 px-4 rounded-xl border text-center font-sans font-medium text-xs transition-all duration-300 flex items-center justify-center gap-2 outline-none ${
-                          voiceGender === "female"
-                            ? "bg-amber-500/10 border-amber-500/40 text-amber-300 shadow-inner"
-                            : "bg-slate-950/80 border-slate-800 hover:bg-slate-900/40 text-slate-400 hover:text-slate-200"
-                        }`}
-                      >
-                        <User className="w-3.5 h-3.5 text-emerald-500" />
-                        <span>{UI_TEXTS[selectedLanguage]?.["voice_female"] || "Female Voice"}</span>
-                      </button>
-                    </div>
                   </div>
 
                   {/* Language Selection */}
@@ -1426,7 +1382,7 @@ export default function App() {
                       {UI_TEXTS[selectedLanguage]?.["label_state_prompt"] || "What challenge are you facing right now?"}
                     </label>
                     
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {PRESET_STATES.map((state) => {
                         const IconComponent = state.icon;
                         const isSelected = selectedState === state.id;
@@ -1504,9 +1460,7 @@ export default function App() {
                       {UI_TEXTS[selectedLanguage]?.["under_btn"] || "Get ready for a rush of adrenaline. Feel the impact of raw and relentless motivation."}
                     </p>
                   </div>
-
                 </form>
-
               </div>
 
               {/* Right Column / Results & Interaction Panel */}
@@ -1621,38 +1575,34 @@ export default function App() {
                         <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
                           
                           {/* Sélecteur de voix direct sur la carte */}
-                          <div className="flex items-center gap-1 bg-slate-950/80 border border-slate-800 p-1 rounded-xl">
-                            <button
-                              onClick={() => {
-                                setVoiceGender("male");
-                                localStorage.setItem("cephboy_voice_gender", "male");
-                              }}
-                              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-mono font-bold transition-all duration-300 flex items-center gap-1.5 outline-none ${
-                                voiceGender === "male"
-                                  ? "bg-amber-500/10 border border-amber-500/30 text-amber-300 shadow-inner"
-                                  : "text-slate-500 hover:text-slate-300 border border-transparent"
-                              }`}
-                              title={UI_TEXTS[selectedLanguage]?.["voice_male"] || "Male Voice"}
+                          <div className="flex items-center gap-2 bg-slate-950/90 border border-slate-800 px-2.5 py-1.5 rounded-xl text-xs font-sans text-slate-300 shadow-inner">
+                            <span className="text-[10px] font-mono font-bold text-amber-500/90 uppercase tracking-widest">{selectedLanguage === "French" ? "VOIX" : "VOICE"}:</span>
+                            <select
+                              value={selectedVoice}
+                              onChange={(e) => handleSelectVoice(e.target.value)}
+                              className="bg-transparent text-slate-200 ring-0 focus:ring-0 focus:outline-none outline-none cursor-pointer hover:text-amber-300 transition-colors font-sans font-bold pr-1 select-none"
                             >
-                              <User className="w-3 h-3 text-amber-500" />
-                              <span>{UI_TEXTS[selectedLanguage]?.["speech_gender_male"] || "MALE"}</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setVoiceGender("female");
-                                localStorage.setItem("cephboy_voice_gender", "female");
-                              }}
-                              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-mono font-bold transition-all duration-300 flex items-center gap-1.5 outline-none ${
-                                voiceGender === "female"
-                                  ? "bg-amber-500/10 border-amber-500/30 text-amber-300 shadow-inner"
-                                  : "text-slate-500 hover:text-slate-300 border border-transparent"
-                              }`}
-                              title={UI_TEXTS[selectedLanguage]?.["voice_female"] || "Female Voice"}
-                            >
-                              <User className="w-3 h-3 text-emerald-500" />
-                              <span>{UI_TEXTS[selectedLanguage]?.["speech_gender_female"] || "FEMALE"}</span>
-                            </button>
+                              {VOICES_LIST.map((v) => (
+                                <option key={v.code} value={v.code} className="bg-slate-950 text-slate-300 font-sans">
+                                  {v.name} ({v.gender === "female" ? "F" : "M"})
+                                </option>
+                              ))}
+                            </select>
                           </div>
+
+                          {isPreviewLoading && (
+                            <div className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-mono animate-pulse">
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                              <span>{selectedLanguage === "French" ? "CHARGEMENT EXTRAIT..." : "LOADING SAMPLE..."}</span>
+                            </div>
+                          )}
+
+                          {!isPreviewLoading && previewingVoice && isVoicePlaying && (
+                            <div className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-mono animate-pulse">
+                              <Volume2 className="w-3.5 h-3.5 animate-bounce text-amber-400" />
+                              <span>{selectedLanguage === "French" ? "LECTURE EXTRAIT..." : "PLAYING SAMPLE..."}</span>
+                            </div>
+                          )}
 
                           {isVoiceLoading && (
                             <div className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-mono animate-pulse">
@@ -1661,14 +1611,43 @@ export default function App() {
                             </div>
                           )}
 
-                          {!isVoiceLoading && currentAudioBase64 && (
+                          {!isVoiceLoading && victorySentence && (
                             <button
                               id="btn_play_climax"
-                              onClick={() => triggerVoicePlayback(currentAudioBase64, "sentence")}
-                              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition shadow-md shadow-amber-500/10 active:scale-95"
+                              onClick={() => {
+                                unlockAudioContext(24000);
+                                if (currentAudioBase64) {
+                                  triggerVoicePlayback(currentAudioBase64, "sentence");
+                                } else {
+                                  stopVoice();
+                                  setIsVoicePlaying(true);
+                                  speakLocalSpeech(victorySentence, () => {
+                                    setIsVoicePlaying(false);
+                                  });
+                                }
+                              }}
+                              className="hidden flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition shadow-md shadow-amber-500/10 active:scale-95"
                             >
                               <Play className="w-3.5 h-3.5 fill-current" />
-                              <span>{UI_TEXTS[selectedLanguage]?.["speech_btn_play"] || "LISTEN TO VOICE"}</span>
+                              <span>
+                                {currentAudioBase64 
+                                  ? (UI_TEXTS[selectedLanguage]?.["speech_btn_play"] || "LISTEN TO VOICE")
+                                  : (selectedLanguage === "French" ? "ÉCOUTER LE COACH" : "LISTEN TO COACH")}
+                              </span>
+                            </button>
+                          )}
+                          
+                          {!isVoiceLoading && !currentAudioBase64 && victorySentence && (
+                            <button
+                              id="btn_retry_tts"
+                              onClick={() => {
+                                setTtsRetryTrigger(prev => prev + 1);
+                              }}
+                              className="hidden flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-slate-800 bg-slate-950/40 hover:bg-slate-900/40 text-slate-400 hover:text-amber-400 text-xs font-bold transition active:scale-95"
+                              title={selectedLanguage === "French" ? "Forcer une nouvelle tentative d'appel API Cloud" : "Force retry Cloud API Voice"}
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" />
+                              <span>{selectedLanguage === "French" ? "FORCER CLOUD" : "RETRY CLOUD"}</span>
                             </button>
                           )}
 
@@ -1735,6 +1714,8 @@ export default function App() {
                         </div>
                       </div>
 
+
+
                       {/* Unified short, beautiful display of Motivation */}
                       <div className="bg-slate-950/60 p-6 sm:p-8 rounded-2xl border border-slate-850/60 relative my-2">
                         <Quote className="absolute top-3 left-3 w-10 h-10 text-slate-900/60 pointer-events-none" />
@@ -1765,7 +1746,6 @@ export default function App() {
                       </div>
 
                     </div>
-
                   </div>
                 )}
 
@@ -1773,13 +1753,11 @@ export default function App() {
 
             </div>
           )}
-
         </div>
-
       </main>
 
-      {/* Footer warning / info */}
-      <footer id="master_footer" className="relative z-10 border-t border-slate-900 bg-slate-950/40 py-8 px-4 mt-16">
+      {/* Footer warning / info (Removed for cleaner UI) */}
+      {/* <footer id="master_footer" className="hidden relative z-10 border-t border-slate-900 bg-slate-950/40 py-8 px-4 mt-16">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
           
           <div className="space-y-1">
@@ -1801,7 +1779,7 @@ export default function App() {
           </div>
 
         </div>
-      </footer>
+      </footer> */}
 
     </div>
   );
